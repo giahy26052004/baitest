@@ -13,8 +13,8 @@ fs.readFile("data.json", "utf8", (err, data) => {
     const jsonData = JSON.parse(data);
 
     // Hàm rút gọn các tên trường trong đối tượng
+    // Hàm rút gọn các tên trường trong đối tượng
     function shortenKeys(obj) {
-      // Định nghĩa bảng ánh xạ các tên khóa dài thành ngắn
       const keyMap = {
         id: "i",
         season_id: "si",
@@ -35,25 +35,53 @@ fs.readFile("data.json", "utf8", (err, data) => {
         referee_id: "rfid",
         related_id: "rid",
         agg_score: "asg",
+        // Rút gọn các trường trong ses
+        ses: "ses",
+        "ses.status_id": "ses.sid",
+        "ses.away_score": "ses.as",
+        "ses.home_score": "ses.hs",
+        "ses.away_score.corners": "ses.as.corners",
+        "ses.away_score.red_card": "ses.as.rc",
+        "ses.away_score.yellow_card": "ses.as.yc",
+        "ses.away_score.penalty_score": "ses.as.ps",
+        "ses.away_score.regular_score": "ses.as.rs",
+        "ses.away_score.overTime_score": "ses.as.ots",
+        "ses.away_score.half_time_score": "ses.as.hts",
+        "ses.home_score.corners": "ses.hs.corners",
+        "ses.home_score.red_card": "ses.hs.rc",
+        "ses.home_score.yellow_card": "ses.hs.yc",
+        "ses.home_score.penalty_score": "ses.hs.ps",
+        "ses.home_score.regular_score": "ses.hs.rs",
+        "ses.home_score.overTime_score": "ses.hs.ots",
+        "ses.home_score.half_time_score": "ses.hs.hts",
       };
 
-      let newObj = {}; // Khởi tạo đối tượng mới để lưu dữ liệu đã rút gọn
-      // Duyệt qua từng khóa trong đối tượng gốc
+      let newObj = {};
+      // Duyệt qua các khóa trong đối tượng
       for (let key in obj) {
         if (obj.hasOwnProperty(key)) {
-          // Ánh xạ khóa cũ thành khóa mới nếu có trong keyMap, ngược lại giữ nguyên
-          const newKey = keyMap[key] || key;
-
-          // Nếu giá trị là chuỗi, loại bỏ khoảng trắng thừa
-          if (typeof obj[key] === "string") {
-            newObj[newKey] = obj[key].trim(); // Xóa khoảng trắng thừa trong chuỗi
+          // Nếu key là "ses", xử lý tiếp các trường con
+          if (key === "ses" && typeof obj[key] === "object") {
+            let newSes = {};
+            for (let subKey in obj[key]) {
+              if (obj[key].hasOwnProperty(subKey)) {
+                const newSubKey = keyMap[`ses.${subKey}`] || subKey; // Áp dụng ánh xạ cho các khóa trong ses
+                newSes[newSubKey] = obj[key][subKey];
+              }
+            }
+            newObj["ses"] = newSes;
           } else {
-            // Nếu không phải chuỗi, giữ nguyên giá trị
-            newObj[newKey] = obj[key];
+            const newKey = keyMap[key] || key;
+            // Loại bỏ khoảng trắng thừa trong chuỗi
+            if (typeof obj[key] === "string") {
+              newObj[newKey] = obj[key].trim(); // Xóa khoảng trắng thừa
+            } else {
+              newObj[newKey] = obj[key]; // Để nguyên giá trị không phải chuỗi
+            }
           }
         }
       }
-      return newObj; // Trả về đối tượng đã rút gọn khóa
+      return newObj; // Trả về đối tượng đã rút gọn
     }
 
     // Hàm phân tích chuỗi JSON trong trường 'sport_event_status'
